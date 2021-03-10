@@ -154,7 +154,7 @@ namespace Negocio
                     cmd.CommandText = "DSIGE_PROY_M_Lista_OT";
                     cmd.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
                     cmd.Parameters.Add("@id_Personal", SqlDbType.Int).Value = q.personalId;
-                    SqlDataReader drV = cmd.ExecuteReader();
+                    var drV = cmd.ExecuteReader();
                     if (drV.HasRows)
                     {
                         List<Ot> v = new List<Ot>();
@@ -214,7 +214,7 @@ namespace Negocio
                             cmdOD.CommandType = CommandType.StoredProcedure;
                             cmdOD.CommandText = "DSIGE_PROY_M_Lista_OT_Detalle";
                             cmdOD.Parameters.Add("@otId", SqlDbType.Int).Value = o.identity;
-                            SqlDataReader drOD = cmdOD.ExecuteReader();
+                            var drOD = cmdOD.ExecuteReader();
                             if (drOD.HasRows)
                             {
                                 List<OtDetalle> ot = new List<OtDetalle>();
@@ -247,7 +247,7 @@ namespace Negocio
                                     cmdF.CommandType = CommandType.StoredProcedure;
                                     cmdF.CommandText = "DSIGE_PROY_M_Lista_OT_Photo";
                                     cmdF.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = detalle.otDetalleId;
-                                    SqlDataReader drF = cmdF.ExecuteReader();
+                                    var drF = cmdF.ExecuteReader();
                                     if (drF.HasRows)
                                     {
                                         List<OtPhoto> f = new List<OtPhoto>();
@@ -264,20 +264,24 @@ namespace Negocio
                                         }
                                         detalle.photos = f;
                                     }
+                                    drF.Close();
                                     ot.Add(detalle);
                                 }
                                 o.detalles = ot;
                             }
+                            drOD.Close();
                             v.Add(o);
                         }
                         s.ots = v;
                     }
+                    drV.Close();
 
                     SqlCommand cmdC = con.CreateCommand();
                     cmdC.CommandTimeout = 0;
                     cmdC.CommandType = CommandType.StoredProcedure;
-                    cmdC.CommandText = "DSIGE_PROY_M_GetGrupo";
-                    SqlDataReader drC = cmdC.ExecuteReader();
+                    cmdC.CommandText = "DSIGE_PROY_M_GetGrupo_New";
+                    cmdC.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
+                    var drC = cmdC.ExecuteReader();
                     if (drC.HasRows)
                     {
                         List<Grupo> p = new List<Grupo>();
@@ -286,17 +290,19 @@ namespace Negocio
                             p.Add(new Grupo()
                             {
                                 grupoId = drC.GetInt32(0),
-                                descripcion = drC.GetString(1)
+                                descripcion = drC.GetString(1),
+                                servicioId = drC.GetInt32(2)
                             });
                         }
                         s.groups = p;
                     }
+                    drC.Close();
 
                     SqlCommand cmdE = con.CreateCommand();
                     cmdE.CommandTimeout = 0;
                     cmdE.CommandType = CommandType.StoredProcedure;
                     cmdE.CommandText = "DSIGE_PROY_M_GetEstado";
-                    SqlDataReader drE = cmdE.ExecuteReader();
+                    var drE = cmdE.ExecuteReader();
                     if (drE.HasRows)
                     {
                         List<Estado> e = new List<Estado>();
@@ -310,12 +316,13 @@ namespace Negocio
                         }
                         s.estados = e;
                     }
+                    drE.Close();
 
                     SqlCommand cmdD = con.CreateCommand();
                     cmdD.CommandTimeout = 0;
                     cmdD.CommandType = CommandType.StoredProcedure;
                     cmdD.CommandText = "DSIGE_PROY_M_GetDistritos";
-                    SqlDataReader drD = cmdD.ExecuteReader();
+                    var drD = cmdD.ExecuteReader();
                     if (drD.HasRows)
                     {
                         List<Distrito> p = new List<Distrito>();
@@ -330,12 +337,13 @@ namespace Negocio
                         }
                         s.distritos = p;
                     }
+                    drD.Close();
 
                     SqlCommand cmdT = con.CreateCommand();
                     cmdT.CommandTimeout = 0;
                     cmdT.CommandType = CommandType.StoredProcedure;
                     cmdT.CommandText = "DSIGE_PROY_M_GetTipoMaterial";
-                    SqlDataReader drT = cmdT.ExecuteReader();
+                    var drT = cmdT.ExecuteReader();
                     if (drT.HasRows)
                     {
                         List<TipoMaterial> p = new List<TipoMaterial>();
@@ -352,13 +360,14 @@ namespace Negocio
                         }
                         s.materials = p;
                     }
+                    drT.Close();
 
                     SqlCommand cmdS = con.CreateCommand();
                     cmdS.CommandTimeout = 0;
                     cmdS.CommandType = CommandType.StoredProcedure;
                     cmdS.CommandText = "DSIGE_PROY_WM_Combo_Usuarios_Servicios";
                     cmdS.Parameters.Add("@Usuario", SqlDbType.Int).Value = q.usuarioId;
-                    SqlDataReader drS = cmdS.ExecuteReader();
+                    var drS = cmdS.ExecuteReader();
                     if (drS.HasRows)
                     {
                         List<Servicio> p = new List<Servicio>();
@@ -373,12 +382,13 @@ namespace Negocio
                         }
                         s.servicios = p;
                     }
+                    drS.Close();
 
                     SqlCommand cmd7 = con.CreateCommand();
                     cmd7.CommandTimeout = 0;
                     cmd7.CommandType = CommandType.StoredProcedure;
                     cmd7.CommandText = "DSIGE_PROY_M_Sed";
-                    SqlDataReader dr7 = cmd7.ExecuteReader();
+                    var dr7 = cmd7.ExecuteReader();
                     if (dr7.HasRows)
                     {
                         List<Sed> p = new List<Sed>();
@@ -393,6 +403,7 @@ namespace Negocio
                         }
                         s.seds = p;
                     }
+                    dr7.Close();
 
                     con.Close();
                 }
