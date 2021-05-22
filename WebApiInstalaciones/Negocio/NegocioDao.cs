@@ -28,6 +28,7 @@ namespace Negocio
                         cmd.CommandTimeout = 0;
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("@usuario", SqlDbType.VarChar).Value = q.login;
+                        cmd.Parameters.Add("@version", SqlDbType.VarChar).Value = q.version;
 
                         SqlDataReader dr = cmd.ExecuteReader();
                         while (dr.Read())
@@ -107,7 +108,6 @@ namespace Negocio
             return cResult;
 
         }
-
         public static string CHRTRAN(string cExpresion, string cPatronBase, string cPatronReemplazo)
         {
             string cResult = "";
@@ -148,262 +148,298 @@ namespace Negocio
                 using (SqlConnection con = new SqlConnection(db))
                 {
                     con.Open();
-                    SqlCommand cmd = con.CreateCommand();
-                    cmd.CommandTimeout = 0;
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandText = "DSIGE_PROY_M_Lista_OT";
-                    cmd.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
-                    cmd.Parameters.Add("@id_Personal", SqlDbType.Int).Value = q.personalId;
-                    var drV = cmd.ExecuteReader();
-                    if (drV.HasRows)
+
+                    // Version
+                    SqlCommand cmdVersion = con.CreateCommand();
+                    cmdVersion.CommandTimeout = 0;
+                    cmdVersion.CommandType = CommandType.StoredProcedure;
+                    cmdVersion.CommandText = "Movil_GetVersion";
+                    cmdVersion.Parameters.Add("@version", SqlDbType.VarChar).Value = q.version;
+
+                    SqlDataReader drVersion = cmdVersion.ExecuteReader();
+                    if (!drVersion.HasRows)
                     {
-                        List<Ot> v = new List<Ot>();
-                        while (drV.Read())
+                        drVersion.Close();
+                        return null;
+                    }
+                    else
+                    {
+                        SqlCommand cmd = con.CreateCommand();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "DSIGE_PROY_M_Lista_OT";
+                        cmd.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
+                        cmd.Parameters.Add("@id_Personal", SqlDbType.Int).Value = q.personalId;
+                        var drV = cmd.ExecuteReader();
+                        if (drV.HasRows)
                         {
-                            var o = new Ot
+                            List<Ot> v = new List<Ot>();
+                            while (drV.Read())
                             {
-                                identity = drV.GetInt32(0),
-                                otId = drV.GetInt32(0),
-                                tipoOrdenId = drV.GetInt32(1),
-                                nombreTipoOrden = drV.GetString(2),
-                                servicioId = drV.GetInt32(3),
-                                nombreArea = drV.GetString(4),
-                                nroObra = drV.GetString(5),
-                                direccion = drV.GetString(6),
-                                distritoId = drV.GetInt32(7),
-                                nombreDistritoId = drV.GetString(8),
-                                referenciaOt = drV.GetString(9),
-                                descripcionOt = drV.GetString(10),
-                                fechaRegistro = drV.GetDateTime(11).ToString("dd/MM/yyyy"),
-                                fechaAsignacion = drV.GetDateTime(12).ToString("dd/MM/yyyy"),
-                                horaAsignacion = drV.GetString(13),
-                                empresaId = drV.GetInt32(14),
-                                nombreEmpresa = drV.GetString(15),
-                                tipoEmpresa = drV.GetString(16),
-                                personalJCId = drV.GetInt32(17),
-                                nombreJO = drV.GetString(18),
-                                otOrigenId = drV.GetInt32(19),
-                                estadoId = drV.GetInt32(20),
-                                nombreEstado = drV.GetString(21),
-                                vencimiento = drV.GetString(22),
-                                latitud = drV.GetString(23),
-                                longitud = drV.GetString(24),
-
-                                fotoCabecera = drV.GetString(25),
-                                fotoAnterior = drV.GetString(26),
-                                distritoIdGps = drV.GetInt32(27),
-                                suministroTD = drV.GetString(28),
-                                nroSed = drV.GetString(29),
-                                viajeIndebido = drV.GetInt32(30),
-                                
-
-                                observacion = "",
-                                motivoPrioridadId = 0,
-                                nombrePrioridad = "",
-                                observaciones = "",
-                                ordenamientoOt = 0,
-                                usuarioId = 0,
-                                estado = 2,
-                                fechaInicioTrabajo = "",
-                                fechaFinTrabajo = ""
-                                
-                            };
-
-                            SqlCommand cmdOD = con.CreateCommand();
-                            cmdOD.CommandTimeout = 0;
-                            cmdOD.CommandType = CommandType.StoredProcedure;
-                            cmdOD.CommandText = "DSIGE_PROY_M_Lista_OT_Detalle";
-                            cmdOD.Parameters.Add("@otId", SqlDbType.Int).Value = o.identity;
-                            var drOD = cmdOD.ExecuteReader();
-                            if (drOD.HasRows)
-                            {
-                                List<OtDetalle> ot = new List<OtDetalle>();
-                                while (drOD.Read())
+                                var o = new Ot
                                 {
-                                    var detalle = new OtDetalle
-                                    {
-                                        otDetalleId = drOD.GetInt32(0),
-                                        otId = drOD.GetInt32(1),
-                                        tipoTrabajoId = drOD.GetInt32(2),
-                                        tipoMaterialId = drOD.GetInt32(3),
-                                        tipoDesmonteId = drOD.GetInt32(4),
-                                        largo = drOD.GetDecimal(5),
-                                        ancho = drOD.GetDecimal(6),
-                                        espesor = drOD.GetDecimal(7),
-                                        total = drOD.GetDecimal(8),
-                                        nroPlaca = drOD.GetString(9),
-                                        m3Vehiculo = drOD.GetDecimal(10),
-                                        estado = 3,
-                                        latitud = drOD.GetString(12),
-                                        longitud = drOD.GetString(13),
-                                        nombreTipoMaterial = drOD.GetString(14),
-                                        cantPanos = (float)drOD.GetDouble(15),
-                                        medHorizontal = drOD.GetDecimal(16),
-                                        medVertical = drOD.GetDecimal(17)
-                                    };
+                                    identity = drV.GetInt32(0),
+                                    otId = drV.GetInt32(0),
+                                    tipoOrdenId = drV.GetInt32(1),
+                                    nombreTipoOrden = drV.GetString(2),
+                                    servicioId = drV.GetInt32(3),
+                                    nombreArea = drV.GetString(4),
+                                    nroObra = drV.GetString(5),
+                                    direccion = drV.GetString(6),
+                                    distritoId = drV.GetInt32(7),
+                                    nombreDistritoId = drV.GetString(8),
+                                    referenciaOt = drV.GetString(9),
+                                    descripcionOt = drV.GetString(10),
+                                    fechaRegistro = drV.GetDateTime(11).ToString("dd/MM/yyyy"),
+                                    fechaAsignacion = drV.GetDateTime(12).ToString("dd/MM/yyyy"),
+                                    horaAsignacion = drV.GetString(13),
+                                    empresaId = drV.GetInt32(14),
+                                    nombreEmpresa = drV.GetString(15),
+                                    tipoEmpresa = drV.GetString(16),
+                                    personalJCId = drV.GetInt32(17),
+                                    nombreJO = drV.GetString(18),
+                                    otOrigenId = drV.GetInt32(19),
+                                    estadoId = drV.GetInt32(20),
+                                    nombreEstado = drV.GetString(21),
+                                    vencimiento = drV.GetString(22),
+                                    latitud = drV.GetString(23),
+                                    longitud = drV.GetString(24),
 
-                                    SqlCommand cmdF = con.CreateCommand();
-                                    cmdF.CommandTimeout = 0;
-                                    cmdF.CommandType = CommandType.StoredProcedure;
-                                    cmdF.CommandText = "DSIGE_PROY_M_Lista_OT_Photo";
-                                    cmdF.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = detalle.otDetalleId;
-                                    var drF = cmdF.ExecuteReader();
-                                    if (drF.HasRows)
+                                    fotoCabecera = drV.GetString(25),
+                                    fotoAnterior = drV.GetString(26),
+                                    distritoIdGps = drV.GetInt32(27),
+                                    suministroTD = drV.GetString(28),
+                                    nroSed = drV.GetString(29),
+                                    viajeIndebido = drV.GetInt32(30),
+
+
+                                    observacion = "",
+                                    motivoPrioridadId = 0,
+                                    nombrePrioridad = "",
+                                    observaciones = "",
+                                    ordenamientoOt = 0,
+                                    usuarioId = 0,
+                                    estado = 2,
+                                    fechaInicioTrabajo = "",
+                                    fechaFinTrabajo = ""
+
+                                };
+
+                                SqlCommand cmdOD = con.CreateCommand();
+                                cmdOD.CommandTimeout = 0;
+                                cmdOD.CommandType = CommandType.StoredProcedure;
+                                cmdOD.CommandText = "DSIGE_PROY_M_Lista_OT_Detalle";
+                                cmdOD.Parameters.Add("@otId", SqlDbType.Int).Value = o.identity;
+                                var drOD = cmdOD.ExecuteReader();
+                                if (drOD.HasRows)
+                                {
+                                    List<OtDetalle> ot = new List<OtDetalle>();
+                                    while (drOD.Read())
                                     {
-                                        List<OtPhoto> f = new List<OtPhoto>();
-                                        while (drF.Read())
+                                        var detalle = new OtDetalle
                                         {
-                                            f.Add(new OtPhoto()
+                                            otDetalleId = drOD.GetInt32(0),
+                                            otId = drOD.GetInt32(1),
+                                            tipoTrabajoId = drOD.GetInt32(2),
+                                            tipoMaterialId = drOD.GetInt32(3),
+                                            tipoDesmonteId = drOD.GetInt32(4),
+                                            largo = drOD.GetDecimal(5),
+                                            ancho = drOD.GetDecimal(6),
+                                            espesor = drOD.GetDecimal(7),
+                                            total = drOD.GetDecimal(8),
+                                            nroPlaca = drOD.GetString(9),
+                                            m3Vehiculo = drOD.GetDecimal(10),
+                                            estado = 3,
+                                            latitud = drOD.GetString(12),
+                                            longitud = drOD.GetString(13),
+                                            nombreTipoMaterial = drOD.GetString(14),
+                                            cantPanos = (float)drOD.GetDouble(15),
+                                            medHorizontal = drOD.GetDecimal(16),
+                                            medVertical = drOD.GetDecimal(17)
+                                        };
+
+                                        SqlCommand cmdF = con.CreateCommand();
+                                        cmdF.CommandTimeout = 0;
+                                        cmdF.CommandType = CommandType.StoredProcedure;
+                                        cmdF.CommandText = "DSIGE_PROY_M_Lista_OT_Photo";
+                                        cmdF.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = detalle.otDetalleId;
+                                        var drF = cmdF.ExecuteReader();
+                                        if (drF.HasRows)
+                                        {
+                                            List<OtPhoto> f = new List<OtPhoto>();
+                                            while (drF.Read())
                                             {
-                                                otPhotoId = drF.GetInt32(0),
-                                                otDetalleId = drF.GetInt32(1),
-                                                nombrePhoto = drF.GetString(2),
-                                                urlPhoto = drF.GetString(3),
-                                                estado = 0
-                                            });
+                                                f.Add(new OtPhoto()
+                                                {
+                                                    otPhotoId = drF.GetInt32(0),
+                                                    otDetalleId = drF.GetInt32(1),
+                                                    nombrePhoto = drF.GetString(2),
+                                                    urlPhoto = drF.GetString(3),
+                                                    estado = 0
+                                                });
+                                            }
+                                            detalle.photos = f;
                                         }
-                                        detalle.photos = f;
+                                        drF.Close();
+                                        ot.Add(detalle);
                                     }
-                                    drF.Close();
-                                    ot.Add(detalle);
+                                    o.detalles = ot;
                                 }
-                                o.detalles = ot;
+                                drOD.Close();
+                                v.Add(o);
                             }
-                            drOD.Close();
-                            v.Add(o);
+                            s.ots = v;
                         }
-                        s.ots = v;
-                    }
-                    drV.Close();
+                        drV.Close();
 
-                    SqlCommand cmdC = con.CreateCommand();
-                    cmdC.CommandTimeout = 0;
-                    cmdC.CommandType = CommandType.StoredProcedure;
-                    cmdC.CommandText = "DSIGE_PROY_M_GetGrupo_New";
-                    cmdC.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
-                    var drC = cmdC.ExecuteReader();
-                    if (drC.HasRows)
-                    {
-                        List<Grupo> p = new List<Grupo>();
-                        while (drC.Read())
+                        SqlCommand cmdC = con.CreateCommand();
+                        cmdC.CommandTimeout = 0;
+                        cmdC.CommandType = CommandType.StoredProcedure;
+                        cmdC.CommandText = "DSIGE_PROY_M_GetGrupo_New";
+                        cmdC.Parameters.Add("@id_Empresa", SqlDbType.Int).Value = q.empresaId;
+                        var drC = cmdC.ExecuteReader();
+                        if (drC.HasRows)
                         {
-                            p.Add(new Grupo()
+                            List<Grupo> p = new List<Grupo>();
+                            while (drC.Read())
                             {
-                                grupoId = drC.GetInt32(0),
-                                descripcion = drC.GetString(1),
-                                servicioId = drC.GetInt32(2)
-                            });
+                                p.Add(new Grupo()
+                                {
+                                    grupoId = drC.GetInt32(0),
+                                    descripcion = drC.GetString(1),
+                                    servicioId = drC.GetInt32(2)
+                                });
+                            }
+                            s.groups = p;
                         }
-                        s.groups = p;
-                    }
-                    drC.Close();
+                        drC.Close();
 
-                    SqlCommand cmdE = con.CreateCommand();
-                    cmdE.CommandTimeout = 0;
-                    cmdE.CommandType = CommandType.StoredProcedure;
-                    cmdE.CommandText = "DSIGE_PROY_M_GetEstado";
-                    var drE = cmdE.ExecuteReader();
-                    if (drE.HasRows)
-                    {
-                        List<Estado> e = new List<Estado>();
-                        while (drE.Read())
+                        SqlCommand cmdE = con.CreateCommand();
+                        cmdE.CommandTimeout = 0;
+                        cmdE.CommandType = CommandType.StoredProcedure;
+                        cmdE.CommandText = "DSIGE_PROY_M_GetEstado";
+                        var drE = cmdE.ExecuteReader();
+                        if (drE.HasRows)
                         {
-                            e.Add(new Estado()
+                            List<Estado> e = new List<Estado>();
+                            while (drE.Read())
                             {
-                                estadoId = drE.GetInt32(0),
-                                abreviatura = drE.GetString(1)
-                            });
+                                e.Add(new Estado()
+                                {
+                                    estadoId = drE.GetInt32(0),
+                                    abreviatura = drE.GetString(1)
+                                });
+                            }
+                            s.estados = e;
                         }
-                        s.estados = e;
-                    }
-                    drE.Close();
+                        drE.Close();
 
-                    SqlCommand cmdD = con.CreateCommand();
-                    cmdD.CommandTimeout = 0;
-                    cmdD.CommandType = CommandType.StoredProcedure;
-                    cmdD.CommandText = "DSIGE_PROY_M_GetDistritos";
-                    var drD = cmdD.ExecuteReader();
-                    if (drD.HasRows)
-                    {
-                        List<Distrito> p = new List<Distrito>();
-                        while (drD.Read())
+                        SqlCommand cmdD = con.CreateCommand();
+                        cmdD.CommandTimeout = 0;
+                        cmdD.CommandType = CommandType.StoredProcedure;
+                        cmdD.CommandText = "DSIGE_PROY_M_GetDistritos";
+                        var drD = cmdD.ExecuteReader();
+                        if (drD.HasRows)
                         {
-                            p.Add(new Distrito()
+                            List<Distrito> p = new List<Distrito>();
+                            while (drD.Read())
                             {
-                                distritoId = drD.GetInt32(0),
-                                nombreDistrito = drD.GetString(1),
-                                estado = drD.GetInt32(2)
-                            });
+                                p.Add(new Distrito()
+                                {
+                                    distritoId = drD.GetInt32(0),
+                                    nombreDistrito = drD.GetString(1),
+                                    estado = drD.GetInt32(2)
+                                });
+                            }
+                            s.distritos = p;
                         }
-                        s.distritos = p;
-                    }
-                    drD.Close();
+                        drD.Close();
 
-                    SqlCommand cmdT = con.CreateCommand();
-                    cmdT.CommandTimeout = 0;
-                    cmdT.CommandType = CommandType.StoredProcedure;
-                    cmdT.CommandText = "DSIGE_PROY_M_GetTipoMaterial";
-                    var drT = cmdT.ExecuteReader();
-                    if (drT.HasRows)
-                    {
-                        List<TipoMaterial> p = new List<TipoMaterial>();
-                        while (drT.Read())
+                        SqlCommand cmdT = con.CreateCommand();
+                        cmdT.CommandTimeout = 0;
+                        cmdT.CommandType = CommandType.StoredProcedure;
+                        cmdT.CommandText = "DSIGE_PROY_M_GetTipoMaterial";
+                        var drT = cmdT.ExecuteReader();
+                        if (drT.HasRows)
                         {
-                            p.Add(new TipoMaterial()
+                            List<TipoMaterial> p = new List<TipoMaterial>();
+                            while (drT.Read())
                             {
-                                detalleId = drT.GetInt32(0),
-                                grupoId = drT.GetInt32(1),
-                                codigo = drT.GetString(2),
-                                descripcion = drT.GetString(3),
-                                estado = drT.GetInt32(4)
-                            });
+                                p.Add(new TipoMaterial()
+                                {
+                                    detalleId = drT.GetInt32(0),
+                                    grupoId = drT.GetInt32(1),
+                                    codigo = drT.GetString(2),
+                                    descripcion = drT.GetString(3),
+                                    estado = drT.GetInt32(4)
+                                });
+                            }
+                            s.materials = p;
                         }
-                        s.materials = p;
-                    }
-                    drT.Close();
+                        drT.Close();
 
-                    SqlCommand cmdS = con.CreateCommand();
-                    cmdS.CommandTimeout = 0;
-                    cmdS.CommandType = CommandType.StoredProcedure;
-                    cmdS.CommandText = "DSIGE_PROY_WM_Combo_Usuarios_Servicios";
-                    cmdS.Parameters.Add("@Usuario", SqlDbType.Int).Value = q.usuarioId;
-                    var drS = cmdS.ExecuteReader();
-                    if (drS.HasRows)
-                    {
-                        List<Servicio> p = new List<Servicio>();
-                        while (drS.Read())
+                        SqlCommand cmdS = con.CreateCommand();
+                        cmdS.CommandTimeout = 0;
+                        cmdS.CommandType = CommandType.StoredProcedure;
+                        cmdS.CommandText = "DSIGE_PROY_WM_Combo_Usuarios_Servicios";
+                        cmdS.Parameters.Add("@Usuario", SqlDbType.Int).Value = q.usuarioId;
+                        var drS = cmdS.ExecuteReader();
+                        if (drS.HasRows)
                         {
-                            p.Add(new Servicio()
+                            List<Servicio> p = new List<Servicio>();
+                            while (drS.Read())
                             {
-                                usuarioId = drS.GetInt32(0),
-                                servicioId = drS.GetInt32(1),
-                                nombreServicio = drS.GetString(2)
-                            });
+                                p.Add(new Servicio()
+                                {
+                                    usuarioId = drS.GetInt32(0),
+                                    servicioId = drS.GetInt32(1),
+                                    nombreServicio = drS.GetString(2)
+                                });
+                            }
+                            s.servicios = p;
                         }
-                        s.servicios = p;
-                    }
-                    drS.Close();
+                        drS.Close();
 
-                    SqlCommand cmd7 = con.CreateCommand();
-                    cmd7.CommandTimeout = 0;
-                    cmd7.CommandType = CommandType.StoredProcedure;
-                    cmd7.CommandText = "DSIGE_PROY_M_Sed";
-                    var dr7 = cmd7.ExecuteReader();
-                    if (dr7.HasRows)
-                    {
-                        List<Sed> p = new List<Sed>();
-                        while (dr7.Read())
+                        SqlCommand cmd7 = con.CreateCommand();
+                        cmd7.CommandTimeout = 0;
+                        cmd7.CommandType = CommandType.StoredProcedure;
+                        cmd7.CommandText = "DSIGE_PROY_M_Sed";
+                        var dr7 = cmd7.ExecuteReader();
+                        if (dr7.HasRows)
                         {
-                            p.Add(new Sed()
+                            List<Sed> p = new List<Sed>();
+                            while (dr7.Read())
                             {
-                                codigo = dr7.GetString(0),
-                                distrito = dr7.GetString(1),
-                                distritoId = dr7.GetInt32(2)
-                            });
+                                p.Add(new Sed()
+                                {
+                                    codigo = dr7.GetString(0),
+                                    distrito = dr7.GetString(1),
+                                    distritoId = dr7.GetInt32(2)
+                                });
+                            }
+                            s.seds = p;
                         }
-                        s.seds = p;
+                        dr7.Close();
+
+
+                        SqlCommand cmd8 = con.CreateCommand();
+                        cmd8.CommandTimeout = 0;
+                        cmd8.CommandType = CommandType.StoredProcedure;
+                        cmd8.CommandText = "DSIGE_PROY_M_NROOBRA_BAJA";
+                        var dr8 = cmd8.ExecuteReader();
+                        if (dr8.HasRows)
+                        {
+                            List<CodigoOts> p = new List<CodigoOts>();
+                            while (dr8.Read())
+                            {
+                                p.Add(new CodigoOts()
+                                {
+                                    codigo = dr8.GetString(0),
+                                });
+                            }
+                            s.codigos = p;
+                        }
+                        dr8.Close();
                     }
-                    dr7.Close();
 
                     con.Close();
                 }

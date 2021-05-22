@@ -42,7 +42,12 @@ namespace WebApiInstalaciones.Controllers
         {
             try
             {
-                return Ok(NegocioDao.GetSync(q));
+                Sync s = NegocioDao.GetSync(q);
+                if (s != null)
+                {
+                    return Ok(NegocioDao.GetSync(q));
+                }
+                else return BadRequest("Actualizar ultima versión");                
             }
             catch (Exception)
             {

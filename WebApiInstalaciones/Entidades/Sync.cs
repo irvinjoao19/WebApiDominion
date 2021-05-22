@@ -11,6 +11,7 @@ namespace Entidades
         public List<TipoMaterial> materials { get; set; }
         public List<Servicio> servicios { get; set; }
         public List<Sed> seds { get; set; }
+        public List<CodigoOts> codigos { get; set; }
        
     }
 }
