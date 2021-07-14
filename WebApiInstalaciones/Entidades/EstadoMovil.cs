@@ -8,6 +8,7 @@ namespace Entidades
 {
     public class EstadoMovil
     {
+        public int id { get; set; }
         public int operarioId { get; set; }
         public int gpsActivo { get; set; }
         public int estadoBateria { get; set; }

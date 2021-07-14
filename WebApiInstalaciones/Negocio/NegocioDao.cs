@@ -5,9 +5,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Negocio
 {
@@ -220,7 +217,9 @@ namespace Negocio
                                     usuarioId = 0,
                                     estado = 2,
                                     fechaInicioTrabajo = "",
-                                    fechaFinTrabajo = ""
+                                    fechaFinTrabajo = "",
+                                    urlPdf = ""
+                                    
 
                                 };
 
@@ -273,7 +272,7 @@ namespace Negocio
                                                     otPhotoId = drF.GetInt32(0),
                                                     otDetalleId = drF.GetInt32(1),
                                                     nombrePhoto = drF.GetString(2),
-                                                    urlPhoto = drF.GetString(3),
+                                                    urlPhoto = drF.GetString(3),                                                   
                                                     estado = 0
                                                 });
                                             }
@@ -876,375 +875,7 @@ namespace Negocio
                 throw ex;
             }
         }
-
-
-        public static Mensaje SaveRegistroNew(Ot t)
-        {
-            try
-            {
-                Mensaje m = null;
-
-                using (SqlConnection con = new SqlConnection(db))
-                {
-                    con.Open();
-                    SqlCommand cmdO = con.CreateCommand();
-                    cmdO.CommandTimeout = 0;
-                    cmdO.CommandType = CommandType.StoredProcedure;
-                    cmdO.CommandText = "DSIGE_PROY_M_SAVE_TRABAJOCAB";
-                    cmdO.Parameters.Add("@otId", SqlDbType.Int).Value = t.identity;
-                    cmdO.Parameters.Add("@id_tipoordentrabajo", SqlDbType.Int).Value = t.tipoOrdenId;
-                    cmdO.Parameters.Add("@id_servicios", SqlDbType.Int).Value = t.servicioId;
-                    cmdO.Parameters.Add("@nroobratd", SqlDbType.VarChar).Value = t.nroObra;
-                    cmdO.Parameters.Add("@direccion_ot", SqlDbType.VarChar).Value = t.direccion;
-                    cmdO.Parameters.Add("@id_distrito", SqlDbType.Int).Value = t.distritoId;
-                    cmdO.Parameters.Add("@referencia_ot", SqlDbType.VarChar).Value = t.referenciaOt;
-                    cmdO.Parameters.Add("@descripcion_ot", SqlDbType.VarChar).Value = t.descripcionOt;
-                    cmdO.Parameters.Add("@fecharegistro_ot", SqlDbType.VarChar).Value = t.fechaRegistro;
-                    cmdO.Parameters.Add("@fechaasignacion_ot", SqlDbType.VarChar).Value = t.fechaAsignacion;
-                    cmdO.Parameters.Add("@id_empresa", SqlDbType.Int).Value = t.empresaId;
-                    cmdO.Parameters.Add("@id_personaljefecuadrilla", SqlDbType.Int).Value = t.personalJCId;
-                    cmdO.Parameters.Add("@id_ot_origen", SqlDbType.Int).Value = t.otOrigenId;
-                    cmdO.Parameters.Add("@obsreasignacion_ot", SqlDbType.VarChar).Value = t.observacion;
-                    cmdO.Parameters.Add("@id_motivoprioridad", SqlDbType.Int).Value = t.motivoPrioridadId;
-                    cmdO.Parameters.Add("@obsmotivoprioridad_ot", SqlDbType.VarChar).Value = t.nombrePrioridad;
-                    cmdO.Parameters.Add("@observaciones_ot", SqlDbType.VarChar).Value = t.observaciones;
-                    cmdO.Parameters.Add("@ordenamiento_ot", SqlDbType.Int).Value = t.ordenamientoOt;
-                    cmdO.Parameters.Add("@latitud_ot", SqlDbType.VarChar).Value = t.latitud;
-                    cmdO.Parameters.Add("@longitud_ot", SqlDbType.VarChar).Value = t.longitud;
-                    cmdO.Parameters.Add("@estado", SqlDbType.Int).Value = t.estadoId;
-                    cmdO.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-
-                    SqlDataReader drO = cmdO.ExecuteReader();
-
-                    m = new Mensaje();
-                    if (drO.HasRows)
-                    {
-                        while (drO.Read())
-                        {
-                            m.mensaje = "Enviado";
-                            m.codigoRetorno = drO.GetInt32(0);
-                            m.codigoBase = t.otId;
-
-                            List<MensajeDetalle> de = new List<MensajeDetalle>();
-
-                            foreach (var d in t.detalles)
-                            {
-                                SqlCommand cmdD = con.CreateCommand();
-                                cmdD.CommandTimeout = 0;
-                                cmdD.CommandType = CommandType.StoredProcedure;
-                                cmdD.CommandText = "DSIGE_PROY_M_SAVETRABAJODET_NEW";
-                                cmdD.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = d.otDetalleId;
-                                cmdD.Parameters.Add("@id_ot", SqlDbType.Int).Value = drO.GetInt32(0);
-                                cmdD.Parameters.Add("@id_tipotrabajo", SqlDbType.Int).Value = d.tipoTrabajoId;
-                                cmdD.Parameters.Add("@id_tipomaterial", SqlDbType.Int).Value = d.tipoMaterialId;
-                                cmdD.Parameters.Add("@id_tipodesmonte", SqlDbType.VarChar).Value = d.tipoDesmonteId;
-                                cmdD.Parameters.Add("@largo_otdet", SqlDbType.Decimal).Value = d.largo;
-                                cmdD.Parameters.Add("@ancho_otdet", SqlDbType.Decimal).Value = d.ancho;
-                                cmdD.Parameters.Add("@espesor_otdet", SqlDbType.Decimal).Value = d.espesor;
-                                cmdD.Parameters.Add("@total_otdet", SqlDbType.Decimal).Value = d.total;
-                                cmdD.Parameters.Add("@nroplacavehiculo", SqlDbType.VarChar).Value = d.nroPlaca;
-                                cmdD.Parameters.Add("@m3vehiculo", SqlDbType.Decimal).Value = d.m3Vehiculo;
-                                cmdD.Parameters.Add("@estado", SqlDbType.Int).Value = d.estado;
-                                cmdD.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                cmdD.Parameters.Add("@latitud", SqlDbType.VarChar).Value = t.latitud;
-                                cmdD.Parameters.Add("@longitud", SqlDbType.VarChar).Value = t.longitud;
-
-                                SqlDataReader drD = cmdD.ExecuteReader();
-
-                                if (drD.HasRows)
-                                {
-                                    while (drD.Read())
-                                    {
-                                        foreach (var p in d.photos)
-                                        {
-                                            SqlCommand cmdP = con.CreateCommand();
-                                            cmdP.CommandTimeout = 0;
-                                            cmdP.CommandType = CommandType.StoredProcedure;
-                                            cmdP.CommandText = "DSIGE_PROY_M_SAVETRABAJOPHOTO";
-                                            cmdP.Parameters.Add("@id_otdet", SqlDbType.Int).Value = drD.GetInt32(0);
-                                            cmdP.Parameters.Add("@nombre_otdet_foto", SqlDbType.VarChar).Value = p.nombrePhoto;
-                                            cmdP.Parameters.Add("@url_otdet_foto", SqlDbType.VarChar).Value = p.urlPhoto;
-                                            cmdP.Parameters.Add("@estado", SqlDbType.Int).Value = p.estado;
-                                            cmdP.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                            cmdP.ExecuteNonQuery();
-                                        }
-
-                                        de.Add(new MensajeDetalle()
-                                        {
-                                            detalleId = d.otDetalleId,
-                                            detalleRetornoId = drD.GetInt32(0)
-                                        });
-                                    }
-                                }
-                            }
-                            m.detalle = de;
-                        }
-                    }
-                    else
-                    {
-                        m.mensaje = "Error";
-                        return m;
-                    }
-
-                    con.Close();
-                    return m;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public static Mensaje SaveRegistroNew2(Ot t)
-        {
-            try
-            {
-                Mensaje m = null;
-
-                using (SqlConnection con = new SqlConnection(db))
-                {
-                    con.Open();
-                    SqlCommand cmdO = con.CreateCommand();
-                    cmdO.CommandTimeout = 0;
-                    cmdO.CommandType = CommandType.StoredProcedure;
-                    cmdO.CommandText = "DSIGE_PROY_M_SAVE_TRABAJOCAB_NEW";
-                    cmdO.Parameters.Add("@otId", SqlDbType.Int).Value = t.identity;
-                    cmdO.Parameters.Add("@id_tipoordentrabajo", SqlDbType.Int).Value = t.tipoOrdenId;
-                    cmdO.Parameters.Add("@id_servicios", SqlDbType.Int).Value = t.servicioId;
-                    cmdO.Parameters.Add("@nroobratd", SqlDbType.VarChar).Value = t.nroObra;
-                    cmdO.Parameters.Add("@direccion_ot", SqlDbType.VarChar).Value = t.direccion;
-                    cmdO.Parameters.Add("@id_distrito", SqlDbType.Int).Value = t.distritoId;
-                    cmdO.Parameters.Add("@referencia_ot", SqlDbType.VarChar).Value = t.referenciaOt;
-                    cmdO.Parameters.Add("@descripcion_ot", SqlDbType.VarChar).Value = t.descripcionOt;
-                    cmdO.Parameters.Add("@fecharegistro_ot", SqlDbType.VarChar).Value = t.fechaRegistro;
-                    cmdO.Parameters.Add("@fechaasignacion_ot", SqlDbType.VarChar).Value = t.fechaAsignacion;
-                    cmdO.Parameters.Add("@id_empresa", SqlDbType.Int).Value = t.empresaId;
-                    cmdO.Parameters.Add("@id_personaljefecuadrilla", SqlDbType.Int).Value = t.personalJCId;
-                    cmdO.Parameters.Add("@id_ot_origen", SqlDbType.Int).Value = t.otOrigenId;
-                    cmdO.Parameters.Add("@obsreasignacion_ot", SqlDbType.VarChar).Value = t.observacion;
-                    cmdO.Parameters.Add("@id_motivoprioridad", SqlDbType.Int).Value = t.motivoPrioridadId;
-                    cmdO.Parameters.Add("@obsmotivoprioridad_ot", SqlDbType.VarChar).Value = t.nombrePrioridad;
-                    cmdO.Parameters.Add("@observaciones_ot", SqlDbType.VarChar).Value = t.observaciones;
-                    cmdO.Parameters.Add("@ordenamiento_ot", SqlDbType.Int).Value = t.ordenamientoOt;
-                    cmdO.Parameters.Add("@latitud_ot", SqlDbType.VarChar).Value = t.latitud;
-                    cmdO.Parameters.Add("@longitud_ot", SqlDbType.VarChar).Value = t.longitud;
-                    cmdO.Parameters.Add("@estado", SqlDbType.Int).Value = t.estadoId;
-                    cmdO.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-
-                    cmdO.Parameters.Add("@fotoOT", SqlDbType.VarChar).Value = t.fotoCabecera;
-                    cmdO.Parameters.Add("@distritoIdGps", SqlDbType.Int).Value = t.distritoIdGps;
-                    cmdO.Parameters.Add("@suministroTD", SqlDbType.VarChar).Value = t.suministroTD;
-                    cmdO.Parameters.Add("@nroSed", SqlDbType.VarChar).Value = t.nroSed;
-
-                    SqlDataReader drO = cmdO.ExecuteReader();
-
-                    m = new Mensaje();
-                    if (drO.HasRows)
-                    {
-                        while (drO.Read())
-                        {
-                            m.mensaje = "Enviado";
-                            m.codigoRetorno = drO.GetInt32(0);
-                            m.codigoBase = t.otId;
-
-                            List<MensajeDetalle> de = new List<MensajeDetalle>();
-
-                            foreach (var d in t.detalles)
-                            {
-                                SqlCommand cmdD = con.CreateCommand();
-                                cmdD.CommandTimeout = 0;
-                                cmdD.CommandType = CommandType.StoredProcedure;
-                                cmdD.CommandText = "DSIGE_PROY_M_SAVETRABAJODET_NEW";
-                                cmdD.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = d.otDetalleId;
-                                cmdD.Parameters.Add("@id_ot", SqlDbType.Int).Value = drO.GetInt32(0);
-                                cmdD.Parameters.Add("@id_tipotrabajo", SqlDbType.Int).Value = d.tipoTrabajoId;
-                                cmdD.Parameters.Add("@id_tipomaterial", SqlDbType.Int).Value = d.tipoMaterialId;
-                                cmdD.Parameters.Add("@id_tipodesmonte", SqlDbType.VarChar).Value = d.tipoDesmonteId;
-                                cmdD.Parameters.Add("@largo_otdet", SqlDbType.Decimal).Value = d.largo;
-                                cmdD.Parameters.Add("@ancho_otdet", SqlDbType.Decimal).Value = d.ancho;
-                                cmdD.Parameters.Add("@espesor_otdet", SqlDbType.Decimal).Value = d.espesor;
-                                cmdD.Parameters.Add("@total_otdet", SqlDbType.Decimal).Value = d.total;
-                                cmdD.Parameters.Add("@nroplacavehiculo", SqlDbType.VarChar).Value = d.nroPlaca;
-                                cmdD.Parameters.Add("@m3vehiculo", SqlDbType.Decimal).Value = d.m3Vehiculo;
-                                cmdD.Parameters.Add("@estado", SqlDbType.Int).Value = d.estado;
-                                cmdD.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                cmdD.Parameters.Add("@latitud", SqlDbType.VarChar).Value = t.latitud;
-                                cmdD.Parameters.Add("@longitud", SqlDbType.VarChar).Value = t.longitud;
-
-                                SqlDataReader drD = cmdD.ExecuteReader();
-
-                                if (drD.HasRows)
-                                {
-                                    while (drD.Read())
-                                    {
-                                        foreach (var p in d.photos)
-                                        {
-                                            SqlCommand cmdP = con.CreateCommand();
-                                            cmdP.CommandTimeout = 0;
-                                            cmdP.CommandType = CommandType.StoredProcedure;
-                                            cmdP.CommandText = "DSIGE_PROY_M_SAVETRABAJOPHOTO";
-                                            cmdP.Parameters.Add("@id_otdet", SqlDbType.Int).Value = drD.GetInt32(0);
-                                            cmdP.Parameters.Add("@nombre_otdet_foto", SqlDbType.VarChar).Value = p.nombrePhoto;
-                                            cmdP.Parameters.Add("@url_otdet_foto", SqlDbType.VarChar).Value = p.urlPhoto;
-                                            cmdP.Parameters.Add("@estado", SqlDbType.Int).Value = p.estado;
-                                            cmdP.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                            cmdP.ExecuteNonQuery();
-                                        }
-
-                                        de.Add(new MensajeDetalle()
-                                        {
-                                            detalleId = d.otDetalleId,
-                                            detalleRetornoId = drD.GetInt32(0)
-                                        });
-                                    }
-                                }
-                            }
-                            m.detalle = de;
-                        }
-                    }
-                    else
-                    {
-                        m.mensaje = "Error";
-                        return m;
-                    }
-
-                    con.Close();
-                    return m;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public static Mensaje SaveRegistroNew3(Ot t)
-        {
-            try
-            {
-                Mensaje m = null;
-
-                using (SqlConnection con = new SqlConnection(db))
-                {
-                    con.Open();
-                    SqlCommand cmdO = con.CreateCommand();
-                    cmdO.CommandTimeout = 0;
-                    cmdO.CommandType = CommandType.StoredProcedure;
-                    cmdO.CommandText = "DSIGE_PROY_M_SAVE_TRABAJOCAB_NEW_3";
-                    cmdO.Parameters.Add("@otId", SqlDbType.Int).Value = t.identity;
-                    cmdO.Parameters.Add("@id_tipoordentrabajo", SqlDbType.Int).Value = t.tipoOrdenId;
-                    cmdO.Parameters.Add("@id_servicios", SqlDbType.Int).Value = t.servicioId;
-                    cmdO.Parameters.Add("@nroobratd", SqlDbType.VarChar).Value = t.nroObra;
-                    cmdO.Parameters.Add("@direccion_ot", SqlDbType.VarChar).Value = t.direccion;
-                    cmdO.Parameters.Add("@id_distrito", SqlDbType.Int).Value = t.distritoId;
-                    cmdO.Parameters.Add("@referencia_ot", SqlDbType.VarChar).Value = t.referenciaOt;
-                    cmdO.Parameters.Add("@descripcion_ot", SqlDbType.VarChar).Value = t.descripcionOt;
-                    cmdO.Parameters.Add("@fecharegistro_ot", SqlDbType.VarChar).Value = t.fechaRegistro;
-                    cmdO.Parameters.Add("@fechaasignacion_ot", SqlDbType.VarChar).Value = t.fechaAsignacion;
-                    cmdO.Parameters.Add("@id_empresa", SqlDbType.Int).Value = t.empresaId;
-                    cmdO.Parameters.Add("@id_personaljefecuadrilla", SqlDbType.Int).Value = t.personalJCId;
-                    cmdO.Parameters.Add("@id_ot_origen", SqlDbType.Int).Value = t.otOrigenId;
-                    cmdO.Parameters.Add("@obsreasignacion_ot", SqlDbType.VarChar).Value = t.observacion;
-                    cmdO.Parameters.Add("@id_motivoprioridad", SqlDbType.Int).Value = t.motivoPrioridadId;
-                    cmdO.Parameters.Add("@obsmotivoprioridad_ot", SqlDbType.VarChar).Value = t.nombrePrioridad;
-                    cmdO.Parameters.Add("@observaciones_ot", SqlDbType.VarChar).Value = t.observaciones;
-                    cmdO.Parameters.Add("@ordenamiento_ot", SqlDbType.Int).Value = t.ordenamientoOt;
-                    cmdO.Parameters.Add("@latitud_ot", SqlDbType.VarChar).Value = t.latitud;
-                    cmdO.Parameters.Add("@longitud_ot", SqlDbType.VarChar).Value = t.longitud;
-                    cmdO.Parameters.Add("@estado", SqlDbType.Int).Value = t.estadoId;
-                    cmdO.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-
-                    cmdO.Parameters.Add("@distritoIdGps", SqlDbType.Int).Value = t.distritoIdGps;
-                    cmdO.Parameters.Add("@suministroTD", SqlDbType.VarChar).Value = t.suministroTD;
-                    cmdO.Parameters.Add("@nroSed", SqlDbType.VarChar).Value = t.nroSed;
-                    cmdO.Parameters.Add("@viajeIndebido", SqlDbType.Int).Value = t.viajeIndebido;
-
-                    SqlDataReader drO = cmdO.ExecuteReader();
-
-                    m = new Mensaje();
-                    if (drO.HasRows)
-                    {
-                        while (drO.Read())
-                        {
-                            m.mensaje = "Enviado";
-                            m.codigoRetorno = drO.GetInt32(0);
-                            m.codigoBase = t.otId;
-
-                            List<MensajeDetalle> de = new List<MensajeDetalle>();
-
-                            foreach (var d in t.detalles)
-                            {
-                                SqlCommand cmdD = con.CreateCommand();
-                                cmdD.CommandTimeout = 0;
-                                cmdD.CommandType = CommandType.StoredProcedure;
-                                cmdD.CommandText = "DSIGE_PROY_M_SAVETRABAJODET_NEW";
-                                cmdD.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = d.otDetalleId;
-                                cmdD.Parameters.Add("@id_ot", SqlDbType.Int).Value = drO.GetInt32(0);
-                                cmdD.Parameters.Add("@id_tipotrabajo", SqlDbType.Int).Value = d.tipoTrabajoId;
-                                cmdD.Parameters.Add("@id_tipomaterial", SqlDbType.Int).Value = d.tipoMaterialId;
-                                cmdD.Parameters.Add("@id_tipodesmonte", SqlDbType.VarChar).Value = d.tipoDesmonteId;
-                                cmdD.Parameters.Add("@largo_otdet", SqlDbType.Decimal).Value = d.largo;
-                                cmdD.Parameters.Add("@ancho_otdet", SqlDbType.Decimal).Value = d.ancho;
-                                cmdD.Parameters.Add("@espesor_otdet", SqlDbType.Decimal).Value = d.espesor;
-                                cmdD.Parameters.Add("@total_otdet", SqlDbType.Decimal).Value = d.total;
-                                cmdD.Parameters.Add("@nroplacavehiculo", SqlDbType.VarChar).Value = d.nroPlaca;
-                                cmdD.Parameters.Add("@m3vehiculo", SqlDbType.Decimal).Value = d.m3Vehiculo;
-                                cmdD.Parameters.Add("@estado", SqlDbType.Int).Value = d.estado;
-                                cmdD.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                cmdD.Parameters.Add("@latitud", SqlDbType.VarChar).Value = t.latitud;
-                                cmdD.Parameters.Add("@longitud", SqlDbType.VarChar).Value = t.longitud;
-
-                                SqlDataReader drD = cmdD.ExecuteReader();
-
-                                if (drD.HasRows)
-                                {
-                                    while (drD.Read())
-                                    {
-                                        foreach (var p in d.photos)
-                                        {
-                                            SqlCommand cmdP = con.CreateCommand();
-                                            cmdP.CommandTimeout = 0;
-                                            cmdP.CommandType = CommandType.StoredProcedure;
-                                            cmdP.CommandText = "DSIGE_PROY_M_SAVETRABAJOPHOTO";
-                                            cmdP.Parameters.Add("@id_otdet", SqlDbType.Int).Value = drD.GetInt32(0);
-                                            cmdP.Parameters.Add("@nombre_otdet_foto", SqlDbType.VarChar).Value = p.nombrePhoto;
-                                            cmdP.Parameters.Add("@url_otdet_foto", SqlDbType.VarChar).Value = p.urlPhoto;
-                                            cmdP.Parameters.Add("@estado", SqlDbType.Int).Value = p.estado;
-                                            cmdP.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
-                                            cmdP.ExecuteNonQuery();
-                                        }
-
-                                        de.Add(new MensajeDetalle()
-                                        {
-                                            detalleId = d.otDetalleId,
-                                            detalleRetornoId = drD.GetInt32(0)
-                                        });
-                                    }
-                                }
-                            }
-                            m.detalle = de;
-                        }
-                    }
-                    else
-                    {
-                        m.mensaje = "Error";
-                        return m;
-                    }
-
-                    con.Close();
-                    return m;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
+ 
         public static Mensaje SaveRegistroNew4(Ot t)
         {
             try
@@ -1494,6 +1125,212 @@ namespace Negocio
                     return m;
                 }
 
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public static Mensaje SaveRegistroNew6(Ot t)
+        {
+            try
+            {
+                Mensaje m = null;
+
+                using (SqlConnection con = new SqlConnection(db))
+                {
+                    con.Open();
+                    SqlCommand cmdO = con.CreateCommand();
+                    cmdO.CommandTimeout = 0;
+                    cmdO.CommandType = CommandType.StoredProcedure;
+                    cmdO.CommandText = "DSIGE_PROY_M_SAVE_TRABAJOCAB_NEW_5";
+                    cmdO.Parameters.Add("@otId", SqlDbType.Int).Value = t.identity;
+                    cmdO.Parameters.Add("@id_tipoordentrabajo", SqlDbType.Int).Value = t.tipoOrdenId;
+                    cmdO.Parameters.Add("@id_servicios", SqlDbType.Int).Value = t.servicioId;
+                    cmdO.Parameters.Add("@nroobratd", SqlDbType.VarChar).Value = t.nroObra;
+                    cmdO.Parameters.Add("@direccion_ot", SqlDbType.VarChar).Value = t.direccion;
+                    cmdO.Parameters.Add("@id_distrito", SqlDbType.Int).Value = t.distritoId;
+                    cmdO.Parameters.Add("@referencia_ot", SqlDbType.VarChar).Value = t.referenciaOt;
+                    cmdO.Parameters.Add("@descripcion_ot", SqlDbType.VarChar).Value = t.descripcionOt;
+                    cmdO.Parameters.Add("@fecharegistro_ot", SqlDbType.VarChar).Value = t.fechaRegistro;
+                    cmdO.Parameters.Add("@fechaasignacion_ot", SqlDbType.VarChar).Value = t.fechaAsignacion;
+                    cmdO.Parameters.Add("@id_empresa", SqlDbType.Int).Value = t.empresaId;
+                    cmdO.Parameters.Add("@id_personaljefecuadrilla", SqlDbType.Int).Value = t.personalJCId;
+                    cmdO.Parameters.Add("@id_ot_origen", SqlDbType.Int).Value = t.otOrigenId;
+                    cmdO.Parameters.Add("@obsreasignacion_ot", SqlDbType.VarChar).Value = t.observacion;
+                    cmdO.Parameters.Add("@id_motivoprioridad", SqlDbType.Int).Value = t.motivoPrioridadId;
+                    cmdO.Parameters.Add("@obsmotivoprioridad_ot", SqlDbType.VarChar).Value = t.nombrePrioridad;
+                    cmdO.Parameters.Add("@observaciones_ot", SqlDbType.VarChar).Value = t.observaciones;
+                    cmdO.Parameters.Add("@ordenamiento_ot", SqlDbType.Int).Value = t.ordenamientoOt;
+                    cmdO.Parameters.Add("@latitud_ot", SqlDbType.VarChar).Value = t.latitud;
+                    cmdO.Parameters.Add("@longitud_ot", SqlDbType.VarChar).Value = t.longitud;
+                    cmdO.Parameters.Add("@estado", SqlDbType.Int).Value = t.estadoId;
+                    cmdO.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
+
+                    cmdO.Parameters.Add("@distritoIdGps", SqlDbType.Int).Value = t.distritoIdGps;
+                    cmdO.Parameters.Add("@suministroTD", SqlDbType.VarChar).Value = t.suministroTD;
+                    cmdO.Parameters.Add("@nroSed", SqlDbType.VarChar).Value = t.nroSed;
+                    cmdO.Parameters.Add("@viajeIndebido", SqlDbType.Int).Value = t.viajeIndebido;
+                    cmdO.Parameters.Add("@fechaInicio", SqlDbType.VarChar).Value = t.fechaInicioTrabajo;
+                    cmdO.Parameters.Add("@fechaFin", SqlDbType.VarChar).Value = t.fechaFinTrabajo;
+                    cmdO.Parameters.Add("@urlPdf", SqlDbType.VarChar).Value = t.urlPdf;
+
+                    SqlDataReader drO = cmdO.ExecuteReader();
+
+                    m = new Mensaje();
+                    if (drO.HasRows)
+                    {
+                        while (drO.Read())
+                        {
+                            m.mensaje = "Enviado";
+                            m.codigoRetorno = drO.GetInt32(0);
+                            m.codigoBase = t.otId;
+
+                            List<MensajeDetalle> de = new List<MensajeDetalle>();
+
+                            foreach (var d in t.detalles)
+                            {
+                                SqlCommand cmdD = con.CreateCommand();
+                                cmdD.CommandTimeout = 0;
+                                cmdD.CommandType = CommandType.StoredProcedure;
+                                cmdD.CommandText = "DSIGE_PROY_M_SAVETRABAJODET_NEW_2";
+                                cmdD.Parameters.Add("@otDetalleId", SqlDbType.Int).Value = d.otDetalleId;
+                                cmdD.Parameters.Add("@id_ot", SqlDbType.Int).Value = drO.GetInt32(0);
+                                cmdD.Parameters.Add("@id_tipotrabajo", SqlDbType.Int).Value = d.tipoTrabajoId;
+                                cmdD.Parameters.Add("@id_tipomaterial", SqlDbType.Int).Value = d.tipoMaterialId;
+                                cmdD.Parameters.Add("@id_tipodesmonte", SqlDbType.VarChar).Value = d.tipoDesmonteId;
+                                cmdD.Parameters.Add("@largo_otdet", SqlDbType.Decimal).Value = d.largo;
+                                cmdD.Parameters.Add("@ancho_otdet", SqlDbType.Decimal).Value = d.ancho;
+                                cmdD.Parameters.Add("@espesor_otdet", SqlDbType.Decimal).Value = d.espesor;
+                                cmdD.Parameters.Add("@total_otdet", SqlDbType.Decimal).Value = d.total;
+                                cmdD.Parameters.Add("@nroplacavehiculo", SqlDbType.VarChar).Value = d.nroPlaca;
+                                cmdD.Parameters.Add("@m3vehiculo", SqlDbType.Decimal).Value = d.m3Vehiculo;
+                                cmdD.Parameters.Add("@estado", SqlDbType.Int).Value = d.estado;
+                                cmdD.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
+                                cmdD.Parameters.Add("@latitud", SqlDbType.VarChar).Value = t.latitud;
+                                cmdD.Parameters.Add("@longitud", SqlDbType.VarChar).Value = t.longitud;
+                                cmdD.Parameters.Add("@Cant_Panos", SqlDbType.Float).Value = d.cantPanos;
+                                cmdD.Parameters.Add("@Med_Horizontal", SqlDbType.Decimal).Value = d.medHorizontal;
+                                cmdD.Parameters.Add("@Med_Vertical", SqlDbType.Decimal).Value = d.medVertical;
+
+                                SqlDataReader drD = cmdD.ExecuteReader();
+
+                                if (drD.HasRows)
+                                {
+                                    while (drD.Read())
+                                    {
+                                        foreach (var p in d.photos)
+                                        {
+                                            SqlCommand cmdP = con.CreateCommand();
+                                            cmdP.CommandTimeout = 0;
+                                            cmdP.CommandType = CommandType.StoredProcedure;
+                                            cmdP.CommandText = "DSIGE_PROY_M_SAVETRABAJOPHOTO";
+                                            cmdP.Parameters.Add("@id_otdet", SqlDbType.Int).Value = drD.GetInt32(0);
+                                            cmdP.Parameters.Add("@nombre_otdet_foto", SqlDbType.VarChar).Value =p.nombrePhoto;
+                                            cmdP.Parameters.Add("@url_otdet_foto", SqlDbType.VarChar).Value = p.urlPhoto;
+                                            cmdP.Parameters.Add("@estado", SqlDbType.Int).Value = p.estado;
+                                            cmdP.Parameters.Add("@usuario_creacion", SqlDbType.Int).Value = t.usuarioId;
+                                            cmdP.ExecuteNonQuery();
+                                        }
+
+                                        de.Add(new MensajeDetalle()
+                                        {
+                                            detalleId = d.otDetalleId,
+                                            detalleRetornoId = drD.GetInt32(0)
+                                        });
+                                    }
+                                }
+                            }
+                            m.detalle = de;
+                        }
+                    }
+                    else
+                    {
+                        m.mensaje = "Error";
+                        return m;
+                    }
+
+                    con.Close();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public static Mensaje SaveEstadoMovil(EstadoMovil e)
+        {
+            try
+            {
+                Mensaje m = null;
+                using (SqlConnection cn = new SqlConnection(db))
+                {
+                    cn.Open();
+                    SqlCommand cmd = cn.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = 0;
+                    cmd.CommandText = "DSIGE_PROY_M_EstadoMovil";
+                    cmd.Parameters.Add("@operarioId", SqlDbType.Int).Value = e.operarioId;
+                    cmd.Parameters.Add("@gpsActivo", SqlDbType.Bit).Value = e.gpsActivo;
+                    cmd.Parameters.Add("@estadoBateria", SqlDbType.Int).Value = e.estadoBateria;
+                    cmd.Parameters.Add("@fecha", SqlDbType.VarChar).Value = e.fecha;
+                    cmd.Parameters.Add("@modoAvion", SqlDbType.Int).Value = e.modoAvion;
+                    cmd.Parameters.Add("@planDatos", SqlDbType.Bit).Value = e.planDatos;
+
+                    int a = cmd.ExecuteNonQuery();
+                    if (a == 1)
+                    {
+                        m = new Mensaje
+                        {
+                            codigoBase = (e.id == 0) ? 0 : e.id,
+                            mensaje = "Enviado"
+                        };
+                    }
+
+                    cn.Close();
+                }
+                return m;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public static Mensaje SaveOperarioGps(EstadoOperario e)
+        {
+            try
+            {
+                Mensaje m = new Mensaje();
+                using (SqlConnection cn = new SqlConnection(db))
+                {
+                    cn.Open();
+                    SqlCommand cmd = cn.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "DSIGE_PROY_M_EstadoGps";
+                    cmd.Parameters.Add("@operarioId", SqlDbType.Int).Value = e.operarioId;
+                    cmd.Parameters.Add("@latitud", SqlDbType.VarChar).Value = e.latitud;
+                    cmd.Parameters.Add("@longitud", SqlDbType.VarChar).Value = e.longitud;
+                    cmd.Parameters.Add("@fechaGPD", SqlDbType.VarChar).Value = e.fechaGPD;
+                    cmd.Parameters.Add("@fecha", SqlDbType.VarChar).Value = e.fecha;
+
+                    int a = cmd.ExecuteNonQuery();
+
+                    if (a == 1)
+                    {
+                        m = new Mensaje
+                        {
+                            codigoBase = (e.id == 0) ? 0 : e.id,
+                            mensaje = "Enviado"
+                        };
+                    }
+
+                    cn.Close();
+                }
+                return m;
             }
             catch (Exception ex)
             {

@@ -43,8 +43,7 @@ namespace Entidades
         public int usuarioId { get; set; }
         public int identity { get; set; }
         public int estado { get; set; }
-
-        // nuevo
+              
         public int distritoIdGps { get; set; }
         public string suministroTD { get; set; }
         public string nroSed { get; set; }
@@ -55,6 +54,7 @@ namespace Entidades
 
         public string fechaInicioTrabajo { get; set; }
         public string fechaFinTrabajo { get; set; } 
+        public string urlPdf { get; set; } 
 
         public List<OtDetalle> detalles { get; set; }
     }

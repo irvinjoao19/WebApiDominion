@@ -15,8 +15,8 @@ namespace WebApiInstalaciones.Controllers
     [RoutePrefix("api/Dominion")]
     public class InstalacionController : ApiController
     {
-
-        private static string path = ConfigurationManager.AppSettings["uploadFile"];
+        private static readonly string path = ConfigurationManager.AppSettings["uploadFile"];
+        private static readonly string pathPdf = ConfigurationManager.AppSettings["uploadPdf"];
 
         [HttpPost]
         [Route("Login")]
@@ -35,7 +35,6 @@ namespace WebApiInstalaciones.Controllers
 
         }
 
-
         [HttpPost]
         [Route("Sync")]
         public IHttpActionResult GetSincronizar(Query q)
@@ -44,10 +43,8 @@ namespace WebApiInstalaciones.Controllers
             {
                 Sync s = NegocioDao.GetSync(q);
                 if (s != null)
-                {
                     return Ok(NegocioDao.GetSync(q));
-                }
-                else return BadRequest("Actualizar ultima versión");                
+                else return BadRequest("Actualizar ultima versión");
             }
             catch (Exception)
             {
@@ -55,86 +52,14 @@ namespace WebApiInstalaciones.Controllers
             }
         }
 
-
-        [HttpPost]
-        [Route("SaveRegistro")]
-        public IHttpActionResult SaveRegistro()
-        {
-            try
-            {
-                //string path = HttpContext.Current.Server.MapPath("~/Imagen/");
-                var files = HttpContext.Current.Request.Files;
-                var testValue = HttpContext.Current.Request.Form["data"];
-                Ot r = JsonConvert.DeserializeObject<Ot>(testValue);
-                Mensaje m = NegocioDao.SaveRegistro(r);
-                if (m != null)
-                {
-                    for (int i = 0; i < files.Count; i++)
-                    {
-                        string fileName = Path.GetFileName(files[i].FileName);
-                        files[i].SaveAs(path + fileName);
-                    }
-
-                    return Ok(m);
-                }
-                else
-                    return BadRequest("Error");
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
-
-        [HttpPost]
-        [Route("SaveRegistroNew")]
-        public async Task<IHttpActionResult> SaveRegistroNewAsync()
-        {
-            try
-            {
-                var files = HttpContext.Current.Request.Files;
-                var testValue = HttpContext.Current.Request.Form["data"];
-                Ot r = JsonConvert.DeserializeObject<Ot>(testValue);
-                Mensaje m = NegocioDao.SaveRegistroNew(r);
-                if (m != null)
-                {
-                    await SaveImage(files);
-                    return Ok(m);
-                }
-                else
-                    return BadRequest("Error");
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
-
-        public async Task SaveImage(HttpFileCollection files)
-        {
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < files.Count; i++)
-                {
-                    string fileName = Path.GetFileName(files[i].FileName);
-
-                    files[i].SaveAs(path + fileName);
-                }
-            });
-        }
-
-
         [HttpPost]
         [Route("SaveGps")]
         public IHttpActionResult SaveOperarioGps(EstadoOperario estadoOperario)
         {
             Mensaje mensaje = NegocioDao.SaveGps(estadoOperario);
             if (mensaje != null)
-            {
                 return Ok(mensaje);
-            }
-            else
-                return BadRequest("Error de Envio");
+            else return BadRequest("Error de Envio");
 
         }
 
@@ -144,12 +69,8 @@ namespace WebApiInstalaciones.Controllers
         {
             Mensaje mensaje = NegocioDao.SaveMovil(e);
             if (mensaje != null)
-            {
                 return Ok(mensaje);
-            }
-            else
-                return BadRequest("Error de Envio");
-
+            else return BadRequest("Error de Envio");
         }
 
         [HttpPost]
@@ -158,11 +79,8 @@ namespace WebApiInstalaciones.Controllers
         {
             List<Proveedor> p = NegocioDao.GetProveedores(e);
             if (p != null)
-            {
                 return Ok(p);
-            }
-            else
-                return BadRequest("No hay datos");
+            else return BadRequest("No hay datos");
         }
 
         [HttpPost]
@@ -171,12 +89,8 @@ namespace WebApiInstalaciones.Controllers
         {
             List<OtReporte> p = NegocioDao.GetOtReporte(e);
             if (p != null)
-            {
                 return Ok(p);
-            }
-            else
-                return BadRequest("No hay datos");
-
+            else return BadRequest("No hay datos");
         }
 
 
@@ -186,12 +100,8 @@ namespace WebApiInstalaciones.Controllers
         {
             List<JefeCuadrilla> p = NegocioDao.GetJefeCuadrillas(e);
             if (p != null)
-            {
                 return Ok(p);
-            }
-            else
-                return BadRequest("No hay datos");
-
+            else return BadRequest("No hay datos");
         }
 
         [HttpPost]
@@ -200,11 +110,8 @@ namespace WebApiInstalaciones.Controllers
         {
             List<OtPlazo> p = NegocioDao.GetOtPlazos(e);
             if (p != null)
-            {
                 return Ok(p);
-            }
-            else
-                return BadRequest("No hay datos");
+            else return BadRequest("No hay datos");
         }
 
         [HttpPost]
@@ -213,15 +120,11 @@ namespace WebApiInstalaciones.Controllers
         {
             List<OtPlazoDetalle> p = NegocioDao.GetOtPlazoDetalles(e);
             if (p != null)
-            {
                 return Ok(p);
-            }
-            else
-                return BadRequest("No hay datos");
+            else return BadRequest("No hay datos");
         }
 
         // nuevo para evitar problemas con las fotos
-
         [HttpPost]
         [Route("SaveOtPhotos")]
         public IHttpActionResult SaveInspeccionesPhoto()
@@ -232,7 +135,8 @@ namespace WebApiInstalaciones.Controllers
                 for (int i = 0; i < files.Count; i++)
                 {
                     string fileName = Path.GetFileName(files[i].FileName);
-                    files[i].SaveAs(path + fileName);
+                    var data = fileName.Substring(fileName.Length - 3);
+                    files[i].SaveAs(((data == "pdf") ? pathPdf : path)  + fileName);
                 }
                 return Ok("Enviado");
             }
@@ -242,48 +146,6 @@ namespace WebApiInstalaciones.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("SaveOt")]
-        public IHttpActionResult SaveOt(Ot o)
-        {
-            Mensaje m = NegocioDao.SaveRegistroNew(o);
-            if (m != null)
-            {
-                return Ok(m);
-            }
-            else
-                return BadRequest("Error");
-        }
-
-        // nuevas modificaciones
-        [HttpPost]
-        [Route("SaveOtNew")]
-        public IHttpActionResult SaveOtNew(Ot o)
-        {
-            Mensaje m = NegocioDao.SaveRegistroNew2(o);
-            if (m != null)
-            {
-                return Ok(m);
-            }
-            else
-                return BadRequest("Error");
-        }
-
-        // ultima modificacion
-        [HttpPost]
-        [Route("SaveOtNew3")]
-        public IHttpActionResult SaveOtNew3(Ot o)
-        {
-            Mensaje m = NegocioDao.SaveRegistroNew3(o);
-            if (m != null)
-            {
-                return Ok(m);
-            }
-            else
-                return BadRequest("Error");
-        }
-
-
         // ultima modificacion detalle agregando 3 parametros mas ...
         [HttpPost]
         [Route("SaveOtNew4")]
@@ -291,11 +153,8 @@ namespace WebApiInstalaciones.Controllers
         {
             Mensaje m = NegocioDao.SaveRegistroNew4(o);
             if (m != null)
-            {
                 return Ok(m);
-            }
-            else
-                return BadRequest("Error");
+            else return BadRequest("Error");
         }
 
 
@@ -306,11 +165,41 @@ namespace WebApiInstalaciones.Controllers
         {
             Mensaje m = NegocioDao.SaveRegistroNew5(o);
             if (m != null)
-            {
                 return Ok(m);
-            }
-            else
-                return BadRequest("Error");
+            else return BadRequest("Error");
+        }
+
+        //nuevo formato con pdf
+        [HttpPost]
+        [Route("SaveOtNew6")]
+        public IHttpActionResult SaveOtNew6(Ot o)
+        {
+            Mensaje m = NegocioDao.SaveRegistroNew6(o);
+            if (m != null)
+                return Ok(m);
+            else return BadRequest("Error");
+        }
+
+
+        [HttpPost]
+        [Route("SaveOperarioGps")]
+        public IHttpActionResult SaveGps(EstadoOperario estadoOperario)
+        {
+            Mensaje m = NegocioDao.SaveOperarioGps(estadoOperario);
+            if (m != null)
+                return Ok(m);
+            else return BadRequest("Error");
+
+        }
+
+        [HttpPost]
+        [Route("SaveOperarioBattery")]
+        public IHttpActionResult SaveEstadoMovil(EstadoMovil estadoMovil)
+        {
+            Mensaje m = NegocioDao.SaveEstadoMovil(estadoMovil);
+            if (m != null)
+                return Ok(m);
+            else return BadRequest("Error");
         }
 
     }

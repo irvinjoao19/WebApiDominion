@@ -8,6 +8,7 @@ namespace Entidades
 {
     public class EstadoOperario
     {
+        public int id { get; set; }
         public int operarioId { get; set; }
         public string latitud { get; set; }
         public string longitud { get; set; }
